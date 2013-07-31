@@ -1,3 +1,2 @@
 
-
-This is demo code for skill refrenses only.
+This is demo code for skill references only.
