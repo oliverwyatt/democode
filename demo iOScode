@@ -1,0 +1,179 @@
+#import "PlayGameViewController.h"
+#import <AVFoundation/AVFoundation.h>
+#import <QuartzCore/QuartzCore.h>
+@implementation PlayGameViewController 
+
+
+int k;
+// The designated initializer.  Override if you create the controller programmatically and want to perform customization that is not appropriate for viewDidLoad.
+/*
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization.
+    }
+    return self;
+}
+*/
+
+/*
+// Implement loadView to create a view hierarchy programmatically, without using a nib.
+- (void)loadView {
+}
+*/
+
+-(void)viewWillAppear:(BOOL)animated
+{
+  self.title=@"Recognize Alphabets";
+}
+// Implement viewDidLoad to do additional setup after loading the view.
+- (void)viewDidLoad 
+{
+    [super viewDidLoad];
+    
+    // these array are used for defining the images name and name of Alphabets
+    
+	imagesArray=[[NSArray alloc]initWithObjects:@"apple-icon.png",@"beach-ball-icon.png",@"cat.png",@"doctor.png",
+				 @"elephant.png",@"fan.png",@"grape-icon.png",@"home.png",
+				 @"India-Flag.png",@"jug.png",@"kites-md.png",@"lotus.png",
+				 @"milk.png",@"nose.PNG",@"Orange.png",@"pencil.png",
+				 @"queen.PNG",@"rat.png",@"ship.png",@"tree_1.png",
+				 @"umbrella.png",@"violin-icon.png",@"world.png",@"xray.png",
+				 @"yoga.png",@"zebra.png",nil];
+	nameArray=[[NSArray alloc]initWithObjects:@"A.PNG",@"B.PNG",@"C.PNG",@"d.png",@"e.png",
+			   @"f.png",@"g.png",@"h.png",@"i.png",
+			   @"j.png",@"k.png",@"l.png",@"m.png",
+			   @"n.png",@"o.png",@"p.png",@"q.png",
+			   @"r.png",@"s.png",@"t1.png",@"u.png",
+            @"v.png",@"w.png",@"x.png",@"y.png",@"z.png",nil];
+    
+    // used for distinguish the iphone 5 screen height  and iphone 4s,4,3gs screen height.
+    
+    if([[UIScreen mainScreen]bounds].size.height==568)
+    {
+        self.view.backgroundColor=[UIColor colorWithPatternImage:[UIImage imageNamed:@"bg3-1.png"]];
+    }
+   else
+    {
+	self.view.backgroundColor=[UIColor colorWithPatternImage:[UIImage imageNamed:@"bg3.png"]];
+    }
+    
+    // to display text
+    
+    displayView=[[UIView alloc]initWithFrame:CGRectMake(40, 85, 150,150)];
+    [self.view addSubview:displayView];
+    [self.view addSubview:lbl];
+    
+    // to display images on UIScrollView
+    
+    myimgView=[[UIImageView alloc]initWithFrame:displayView.frame];
+    [myimgView setImage:[UIImage imageNamed:[imagesArray objectAtIndex:0]]];
+    [displayView addSubview:myimgView];
+    picView=[[UIImageView alloc] initWithFrame:CGRectMake(115, 15, 80, 80)];
+    [picView setImage:[UIImage imageNamed:[nameArray objectAtIndex:0]]];
+    myScrollView=[[UIScrollView alloc]initWithFrame:CGRectMake(20, 405, 270, 100)];
+    [self.view addSubview:picView];
+    [myScrollView setContentSize:CGSizeMake(26*82+5, 80)];
+    myScrollView.backgroundColor=[UIColor clearColor];
+    [self.view addSubview:myScrollView];
+    [self loadButtons];
+
+	self.navigationController.navigationBar.tintColor=[UIColor colorWithRed:.8 green:.3 blue:.5 alpha:.5];
+}
+
+// loading buttons in a ScrollView 
+
+-(void)loadButtons
+{
+	for(int i=0;i<26;i++)
+	{
+        UIButton *btn=[UIButton buttonWithType:UIButtonTypeCustom];
+		btn.frame=CGRectMake(5+i*82, 0, 80,78);
+		btn.tag=i;
+        [btn setBackgroundImage:[UIImage imageNamed:[imagesArray objectAtIndex:i]]  forState:UIControlStateNormal];
+        btn.titleLabel.font=[UIFont boldSystemFontOfSize:40];
+		[btn addTarget:self action:@selector(setCurrentView:) forControlEvents:UIControlEventTouchUpInside];
+		[myScrollView addSubview:btn];
+	}
+}
+
+// this method is used for setting current View
+
+-(void)setCurrentView:(id)sender
+{
+	[picView setImage:[UIImage imageNamed:[nameArray objectAtIndex:[sender tag]]]];
+   	[myimgView removeFromSuperview];
+    [myimgView setImage:[UIImage imageNamed:[imagesArray objectAtIndex:[sender tag]]]];
+	[displayView addSubview:myimgView];
+ 	tag=[sender tag];
+}
+
+// moving images next and previous when click on Button
+
+-(void)nextprevious:(id)sender
+{
+    
+	switch ([sender tag])
+    {
+		case 100:
+        {
+            NSLog(@"%i",globalTag);
+            [myimgView removeFromSuperview];
+            [myimgView setImage:[UIImage imageNamed:[imagesArray objectAtIndex:globalTag-1]]];
+            lbl1.text=[nameArray objectAtIndex:globalTag-1];
+            [displayView addSubview:myimgView];
+            [picView setImage:[UIImage imageNamed:[nameArray objectAtIndex:globalTag-1]]];		 
+             globalTag--;
+            }
+			break;
+
+		case 101:
+        {
+            //i=2;
+            NSLog(@"%i",[sender tag]);
+            if (globalTag==25) 
+            {
+                globalTag=-1;
+            }
+            [myimgView removeFromSuperview];
+            [myimgView setImage:[UIImage imageNamed:[imagesArray objectAtIndex:globalTag+1]]];
+            [picView setImage:[UIImage imageNamed:[nameArray objectAtIndex:globalTag+1]]];
+            [displayView addSubview:myimgView];
+             globalTag++;
+                }
+			break;
+		default:
+			break;
+    }
+}
+/*
+ // Override to allow orientations other than the default portrait orientation.
+ - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+ // Return YES for supported orientations.
+ return (interfaceOrientation == UIInterfaceOrientationPortrait);
+ }
+ */
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    // Release any cached data, images, etc. that aren't in use.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+
+//- (void)dealloc 
+//{
+//    [super dealloc];
+//    [player release];
+//}
+//
+
+@end
