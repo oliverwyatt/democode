@@ -1,8 +1,3 @@
-democode
-========
 
-demo ios code
 
-touch README.md
-
-git init
+This is demo code for skill refrenses only.
