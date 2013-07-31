@@ -1,0 +1,2023 @@
+
+#import "OnlineViewController.h"
+#import "CJSONDeserializer.h"
+//#import "ViewController.h"
+#import "JSONKit.h"
+//#import "youTubePlayer.h"
+#import "SBJSON.h"
+#import "FbGraphFile.h"
+#import "AppDelegate.h"
+
+@implementation OnlineViewController
+@synthesize cell,arrImage,myString;
+BOOL shouldButtonRequired;
+BOOL shouldButtonRequiredDeleteButton;
+
+
+
+
+
+-(void)viewWillAppear:(BOOL)animated
+{
+      [[UIApplication sharedApplication] setStatusBarOrientation:UIInterfaceOrientationPortrait];
+  
+    self.navigationController.presentedViewController.navigationController.navigationBarHidden=YES;
+     self.navigationController.navigationBarHidden=YES;
+   // to find weather the user logged in singsaam account or not 
+    NSUserDefaults * defaults =  [NSUserDefaults standardUserDefaults];
+ myString = [defaults stringForKey:@"userId"];
+    NSLog(@"nasdasdsad-%@",myString);
+    if([myString isEqual:myString])
+    {
+         [maptypeSegment setEnabled:YES forSegmentAtIndex:2];
+//         maptypeSegment.selectedSegmentIndex=0;
+    }
+    
+    else
+    {
+        [maptypeSegment setEnabled:NO forSegmentAtIndex:2];
+      [myTable removeFromSuperview];
+        
+        
+    }
+  
+    
+}
+
+
+- (void)viewDidLoad 
+{
+     // for creating iAds
+    [self createAdBannerView];
+    [self.view addSubview:adBannerView];
+    libraryView=[[UIView alloc]initWithFrame:CGRectMake(105, 100, 200, 200)];
+    libraryView.backgroundColor=[UIColor colorWithPatternImage:[UIImage imageNamed:@"Menu_BG.png"]];
+    libraryView.layer.cornerRadius=5;
+    
+    libraryView1=[[UIView alloc]initWithFrame:CGRectMake(105,100, 200, 200)];
+    libraryView1.backgroundColor=[UIColor colorWithPatternImage:[UIImage imageNamed:@"Menu_BG.png"]];
+   // libraryView1.layer.cornerRadius=5;
+
+    maptypeSegment=[[UISegmentedControl alloc]initWithItems:[NSArray arrayWithObjects:
+                                                             [NSString stringWithString:NSLocalizedString(@"Newly Added", @"")], [NSString stringWithString:NSLocalizedString(@"Top 50", @"")], [NSString stringWithString:NSLocalizedString(@"My SingSaam", @"")],nil]];
+    maptypeSegment.frame=CGRectMake(0,35,320,30);
+    maptypeSegment.tintColor=[UIColor colorWithRed:.2 green:.5 blue:.5 alpha:.8];
+    maptypeSegment.tag=j;
+  [maptypeSegment setSegmentedControlStyle:UISegmentedControlStyleBar];
+	[maptypeSegment addTarget:self action:@selector(changeType:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:maptypeSegment];
+   
+    [maptypeSegment setEnabled:NO forSegmentAtIndex:2];
+
+
+      
+    youTable=[[UITableView alloc]initWithFrame:CGRectMake(0, 65, 320, 290)  style:UITableViewStylePlain];
+    youTable.delegate=self;
+    youTable.dataSource=self;
+    youTable.tag=11;
+    youTable.backgroundColor=[UIColor colorWithWhite:.1 alpha:.6];
+    youTable.separatorColor=[UIColor colorWithWhite:.9 alpha:.4];
+    
+    searchTable=[[UITableView alloc]initWithFrame:CGRectMake(0, 65, 320, 290)  style:UITableViewStylePlain];
+    searchTable.delegate=self;
+    searchTable.dataSource=self;
+    searchTable.tag=12;
+    searchTable.backgroundColor=[UIColor colorWithWhite:.1 alpha:.6];
+    searchTable.separatorColor=[UIColor colorWithWhite:.9 alpha:.4];
+    
+    
+    stable=[[UITableView alloc]initWithFrame:CGRectMake(0, 65, 320, 290)  style:UITableViewStylePlain];
+    stable.delegate=self;
+    stable.dataSource=self;
+    stable.tag=14;
+    stable.backgroundColor=[UIColor colorWithWhite:.1 alpha:.6];
+    stable.separatorColor=[UIColor colorWithWhite:.9 alpha:.4];
+    
+	table=[[UITableView alloc]initWithFrame:CGRectMake(0,65, 320, 290) style:UITableViewStylePlain];
+	table.backgroundColor=[UIColor colorWithWhite:.1 alpha:.6];
+    table.separatorColor=[UIColor colorWithWhite:.9 alpha:.4];
+	table.delegate=self;
+	table.dataSource=self;
+    table.tag=1;
+       
+    
+     myTable=[[UITableView alloc]initWithFrame:CGRectMake(0,65,320,290) style:UITableViewStylePlain];
+   	myTable.backgroundColor=[UIColor colorWithWhite:.1 alpha:.6];
+       myTable.separatorColor=[UIColor colorWithWhite:.9 alpha:.4];
+    myTable.delegate=self;
+   	myTable.dataSource=self;
+     myTable.tag=6;
+    
+    youTubeTable=[[UITableView alloc]initWithFrame:CGRectMake(0,65, 320, 290) style:UITableViewStylePlain];
+	youTubeTable.backgroundColor=[UIColor colorWithWhite:.1 alpha:.6];
+    youTubeTable.separatorColor=[UIColor colorWithWhite:.9 alpha:.4];
+	youTubeTable.delegate=self;
+	youTubeTable.dataSource=self;
+    youTubeTable.tag=8;
+
+     
+    title=nil;
+    id1=[[NSMutableArray alloc]init];
+    ansSet1=[[NSMutableArray alloc]init];
+    catArray=[[NSMutableArray alloc]init];
+    categoryArray=[[NSMutableArray alloc]init];
+    self.navigationController.navigationBarHidden=NO;
+    self.navigationController.navigationBar.userInteractionEnabled=YES;
+    UIApplication* app = [UIApplication sharedApplication];
+	app.networkActivityIndicatorVisible = YES;
+    [super viewDidLoad];
+    dataObject=[[DataBase alloc]init];
+    
+	self.navigationController.navigationBar.tintColor=[UIColor colorWithRed:.2 green:.5 blue:.5 alpha:.8];
+    
+	shouldButtonRequired=YES;
+    shouldButtonRequiredDeleteButton=YES;
+	
+ //check the screen resolution of iphone
+
+       if([[UIScreen mainScreen] bounds].size.height == 568)
+    {
+        NSLog(@"Resizing table view");
+        CGRect tableFrame = [table frame];
+        tableFrame.size.height = 385.0;
+        [table setFrame:tableFrame];
+    }    //
+    
+    if([[UIScreen mainScreen] bounds].size.height == 568)
+    {
+        NSLog(@"Resizing table view");
+        CGRect tableFrame = [youTubeTable frame];
+        tableFrame.size.height = 385.0;
+        [youTubeTable setFrame:tableFrame];
+    }    //
+    if([[UIScreen mainScreen] bounds].size.height == 568)
+    {
+        NSLog(@"Resizing table view");
+        CGRect tableFrame = [stable frame];
+        tableFrame.size.height = 385.0;
+        [stable setFrame:tableFrame];
+    }    //
+    if([[UIScreen mainScreen] bounds].size.height == 568)
+    {
+        NSLog(@"Resizing table view");
+        CGRect tableFrame = [youTable frame];
+        tableFrame.size.height = 385.0;
+        [youTable setFrame:tableFrame];
+    }    //
+    if([[UIScreen mainScreen] bounds].size.height == 568)
+    {
+        NSLog(@"Resizing table view");
+        CGRect tableFrame = [myTable frame];
+        tableFrame.size.height = 385.0;
+        [myTable setFrame:tableFrame];
+    }    //
+    if([[UIScreen mainScreen] bounds].size.height == 568)
+    {
+        NSLog(@"Resizing table view");
+        CGRect tableFrame = [searchTable frame];
+        tableFrame.size.height = 385.0;
+        [searchTable setFrame:tableFrame];
+    }    //
+
+    //    [self.view addSubview:toolBar];
+	[super viewDidLoad];
+    [self showLoadingIndicator];
+    
+    // searching online songs
+
+    search=[[UISearchBar alloc]initWithFrame:CGRectMake(0, 0,320,35)];
+    search.delegate=self;
+    search.tintColor=[UIColor colorWithRed:.2 green:.5 blue:.5 alpha:.8];
+    [self.view addSubview:search];
+    NSString *client_id = @"173445506144965";
+    
+    fbGraph = [[FbGraph alloc] initWithFbClientID:client_id];
+[self webData];
+}
+
+// creating iADs banner 
+- (void)createAdBannerView
+{
+    adBannerView = [[ADBannerView alloc] init];
+    adBannerView.delegate = self;
+    adBannerView.requiredContentSizeIdentifiers = [NSSet setWithObjects: ADBannerContentSizeIdentifierLandscape, nil];
+    [adBannerView setAutoresizingMask: UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleTopMargin];
+    adBannerView.backgroundColor=[UIColor clearColor];
+    [self.view addSubview:adBannerView];
+}
+//adjust the frame of banner
+- (void)adjustBannerView
+{
+    CGRect contentViewFrame = self.view.bounds;
+    CGRect adBannerFrame = adBannerView.frame;
+    
+    if([adBannerView isBannerLoaded])
+    {
+        CGSize bannerSize = [ADBannerView sizeFromBannerContentSizeIdentifier:adBannerView.currentContentSizeIdentifier];
+        contentViewFrame.size.height = contentViewFrame.size.height - bannerSize.height;
+        adBannerFrame.origin.y = contentViewFrame.size.height;
+    }
+    else
+    {
+        adBannerFrame.origin.y = contentViewFrame.size.height;
+    }
+    [UIView animateWithDuration:0.5 animations:^{
+        adBannerView.frame = adBannerFrame;
+        contentView.frame = contentViewFrame;
+    }];
+}
+
+// resigning text field
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [titleField resignFirstResponder];
+    [categoryField resignFirstResponder];
+
+    [artistField resignFirstResponder];
+    [search resignFirstResponder];
+ 
+    [textfield resignFirstResponder];
+    [textfield1 resignFirstResponder];
+    [boxView removeFromSuperview];
+}
+
+// searching online songs from singsaam website.
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
+{
+    [libraryView removeFromSuperview];
+    [libraryView1 removeFromSuperview];
+    [search resignFirstResponder];
+    
+    
+    switch (j) 
+    
+    {
+            
+        case 0:
+        {
+           
+
+            NSString *strURL1 =[NSString stringWithFormat:@"http://app.singsaam.com/iphoneSearch.php?table=singsaam_media&title=%@",[searchBar.text stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            myUrl = [NSURL URLWithString:strURL1];
+            NSLog(@"my url iiiii---%@",myUrl);
+            [table removeFromSuperview];
+             // [artist2 removeAllObjects];
+            [array3 removeAllObjects];
+            [array6 removeAllObjects];
+            [array2 removeAllObjects];
+            [arrImage1 removeAllObjects];
+            [arrImage removeAllObjects];
+            [self searchData];
+              [table reloadData];
+           [self.view addSubview:table];
+           
+            
+        }
+            
+            break;
+        case 1:
+        {
+            NSString *strURL1  = [NSString stringWithFormat:@"http://app.singsaam.com/iphoneSearch.php?table=singsaam_media&title=%@",[searchBar.text stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            myUrl = [NSURL URLWithString:strURL1];
+            [p_image1 removeAllObjects];
+            [link removeAllObjects];
+            [p_image2 removeAllObjects];
+//            [view2 removeFromSuperview];
+            [arrImage removeAllObjects];
+            [arrImage1 removeAllObjects];
+            [self ytSearch];
+            [table removeFromSuperview];
+            [youTable removeFromSuperview];
+            
+            [self.view addSubview:searchTable];
+            [searchTable reloadData];
+
+        }
+            
+            break;
+        case 2:
+        {
+            NSString *strURL1  = [NSString stringWithFormat:@"http://app.singsaam.com/iphoneSearch.php?table=singsaam_media&title=%@",[searchBar.text stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            
+            NSLog(@"dsfdsfsdfsdfsdfsd---%@",strURL1);
+            myUrl = [NSURL URLWithString:strURL1];
+            [p_image1 removeAllObjects];
+            [link removeAllObjects];
+            [p_image2 removeAllObjects];
+            //            [view2 removeFromSuperview];
+            [arrImage removeAllObjects];
+            [arrImage1 removeAllObjects];
+            [self ytSearch];
+            [table removeFromSuperview];
+            [myTable removeFromSuperview];
+            [youTable removeFromSuperview];
+            [searchTable removeFromSuperview];
+            [self.view addSubview:stable];
+            [stable reloadData];
+            
+        }
+            
+            break;
+
+            
+        default:
+            break;
+    }
+    
+    [myTable reloadData];
+    [table reloadData];
+}
+
+-(void)ytSearch
+{
+    [webView removeFromSuperview];
+    [myView1 removeFromSuperview];
+    maptypeSegment.userInteractionEnabled=YES;
+    sTitle=nil;
+    slink=nil;
+    link=nil;
+    sImage=nil;
+    sImage1=nil;
+    arrImage=nil;
+    myArr=nil;
+    view=nil;
+    Cat=nil;
+    cattype2=nil;
+    if(sTitle==nil || slink==nil || link==nil || sImage==nil || sImage1==nil || arrImage==nil || myArr==nil || view==nil || Cat==nil || cattype2==nil)
+    {
+        sTitle=[[NSMutableArray alloc]init];
+        slink=[[NSMutableArray alloc]init];
+        link=[[NSMutableArray alloc]init];
+        sImage=[[NSMutableArray alloc]init];
+        sImage1=[[NSMutableArray alloc]init];
+        arrImage=[[NSMutableArray alloc]init];
+        myArr=[[NSMutableArray alloc]init];
+        view=[[NSMutableArray alloc]init];
+        Cat=[[NSMutableArray alloc]init];
+         cattype2=[[NSMutableArray alloc]init];
+    }
+    else
+    {
+        [sTitle release];
+        [slink release];
+        [sImage release];
+        [sImage1 release];
+        [arrImage release];
+        [link release];
+        [myArr release];
+        [view release];
+        [Cat release];
+        [cattype2 release];
+    }
+    
+    
+    //    searchBar=[[UISearchBar alloc]initWithFrame:CGRectMake(0, 0, 320, 35)];
+    //    searchBar.tintColor=[UIColor colorWithRed:.2 green:.5 blue:.5 alpha:.8];
+    //    [self.view addSubview:searchBar];
+    //    searchBar.delegate=self;
+    // [self.view addSubview:searchTable];
+    
+    
+    
+    p_image1=[[NSMutableArray alloc]init];
+    artist=[[NSMutableArray alloc]init];
+    
+    p_image2=[[NSMutableArray alloc]init];
+    
+    
+    
+    NSString *jsonreturn = [[NSString alloc]initWithContentsOfURL:myUrl usedEncoding:nil error:nil];
+    //	NSLog(@"%@--------->",jsonreturn); // Look at the console and you can see what the restults are
+    
+    if (jsonreturn==nil)
+    {
+        UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"" message:@"You are not connected with internet or SingSaam Server Down" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil,nil];
+        [alert show];
+        [alert release];
+        UIApplication* app = [UIApplication sharedApplication];
+        app.networkActivityIndicatorVisible = NO;
+        [self hideLoadingIndicator];
+    }
+    
+    
+    else
+    {
+        
+        NSData *jsonData = [jsonreturn dataUsingEncoding:NSUTF32BigEndianStringEncoding];
+        [jsonreturn release];
+        
+        // In "real" code you should surround this with try and catch
+        NSDictionary * dict = [[CJSONDeserializer deserializer] deserializeAsDictionary:jsonData error:nil];
+        
+        if (dict)
+        {
+            myArr=[[dict objectForKey:@"data"]retain];
+            
+            
+        }
+        NSDictionary *dict12 = [myArr objectAtIndex:0];
+        
+        if ([[dict12 objectForKey:@"id"] isEqualToString:@"Not Found"])
+        {
+            UIAlertView *al=[[UIAlertView alloc]initWithTitle:@"" message:@"No Result found" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+            [al show];
+            [al release];
+            
+            
+        } 
+
+        int i1;
+        
+        for (i1=0; i1<[myArr count]; i1++)
+            
+        {
+            
+            NSDictionary *dict1 = [myArr objectAtIndex:i1];
+            //        numview
+            //        duration
+            //
+            //        typeVedio
+            
+            
+            [link addObject:[dict1 objectForKey:@"url"]];
+            [p_image2 addObject:[dict1 objectForKey:@"thumbimage"]];
+            [p_image1 addObject:[dict1 objectForKey:@"title"]];
+            [slink addObject:[dict1 objectForKey:@"id"]];
+            [artist addObject:[dict1 objectForKey:@"artist"]];
+            [view addObject:[dict1 objectForKey:@"numview"]];
+            [Cat addObject:[dict1 objectForKey:@"catName"]];
+               [cattype2 addObject:[dict1 objectForKey:@"catType"]];
+            NSLog(@"sdwfs=%@",artist);
+                 }
+        for(int i=0; i<[p_image2 count]; i++)
+        {
+            NSURL *url=[NSURL URLWithString:[p_image2 objectAtIndex:i]];
+            LazyLoading* asyncImage = [[[LazyLoading alloc]initWithFrame:CGRectMake(0,-10,100,120)] autorelease];
+            asyncImage.tag = 999;
+            [asyncImage loadImageFromURL:url];
+            [arrImage addObject:asyncImage];
+            
+        }
+        UIApplication* app = [UIApplication sharedApplication];
+        app.networkActivityIndicatorVisible = NO;
+        [self hideLoadingIndicator];
+        
+        // self.view.userInteractionEnabled=YES;
+        
+        NSLog(@"ppppp=%@",p_image1);
+        NSLog(@"link =%@",link);
+        
+    }
+}
+
+-(void)searchData
+{
+    artist2=[[NSMutableArray alloc]init];
+       [boxView removeFromSuperview];
+    NSString *jsonreturn = [[NSString alloc]initWithContentsOfURL:myUrl usedEncoding:nil error:nil];
+    
+//    NSLog(@"-->%@",jsonreturn);
+    
+    NSData *jsonData = [jsonreturn dataUsingEncoding:NSUTF32BigEndianStringEncoding];
+    [jsonreturn release];
+    
+    // In "real" code you should surround this with try and catch
+    NSDictionary * dict = [[CJSONDeserializer deserializer] deserializeAsDictionary:jsonData error:nil];
+    
+    [self array];
+    
+    
+    if (dict)
+    {
+        array1=[[dict objectForKey:@"data"]retain];
+        
+    }
+    NSDictionary *dict12 = [array1 objectAtIndex:0];
+    
+    if ([[dict12 objectForKey:@"id"] isEqualToString:@"Not Found"]) 
+    {       
+        UIAlertView *al=[[UIAlertView alloc]initWithTitle:@"" message:@"No Result found" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [al show];
+        [al release];
+        
+        
+    } 
+    else
+    {
+        for (int i=0; i<[array1 count]; i++)
+        {
+            NSDictionary *dict1 = [array1 objectAtIndex:i];
+            [array2 addObject:[dict1 objectForKey:@"title"]];
+            [array3 addObject:[dict1 objectForKey:@"url"]];
+            [array4 addObject:[dict1 objectForKey:@"numview"]];
+            [array5 addObject:[dict1 objectForKey:@"duration"]];
+            [array6 addObject:[dict1 objectForKey:@"thumbimage"]];
+            [array7 addObject:[dict1 objectForKey:@"typeVedio"]];
+            [array8 addObject:[dict1 objectForKey:@"id"]];
+            [catArr addObject:[dict1 objectForKey:@"catName"]];
+              [cattype1 addObject:[dict1 objectForKey:@"catType"]];
+            [artist2 addObject:[dict1 objectForKey:@"artist"]];
+        }
+        for(int i=0; i<[array6 count]; i++)
+        {
+            NSURL *url=[NSURL URLWithString:[array6 objectAtIndex:i]];
+            LazyLoading* asyncImage = [[[LazyLoading alloc]initWithFrame:CGRectMake(0,-10,100,120)] autorelease];
+            asyncImage.tag = 999;
+            [asyncImage loadImageFromURL:url];
+            [arrImage addObject:asyncImage];
+                        
+        }
+
+        [self performSelector:@selector(hideLoadingIndicator) withObject:nil afterDelay:1.0];
+    }
+   
+}
+
+-(void)youtubeSearchData
+{
+    NSString *jsonreturn = [[NSString alloc]initWithContentsOfURL:myUrl usedEncoding:nil error:nil];
+    NSData *jsonData = [jsonreturn dataUsingEncoding:NSUTF32BigEndianStringEncoding];
+    [jsonreturn release];
+    
+    // In "real" code you should surround this with try and catch
+    NSDictionary * dict = [[CJSONDeserializer deserializer] deserializeAsDictionary:jsonData error:nil];
+    [self array];
+    
+      
+    if (dict)
+    {
+        array1=[[dict objectForKey:@"data"]retain];
+        
+    }
+    NSDictionary *dict12 = [array1 objectAtIndex:0];
+    
+    if ([[dict12 objectForKey:@"id"] isEqualToString:@"Not Found"]) 
+    {       
+        UIAlertView *al=[[UIAlertView alloc]initWithTitle:@"" message:@"No Result found" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [al show];
+        [al release];
+        
+    } 
+    else
+    {
+        
+        
+        for (int i=0; i<[array1 count]; i++) 
+        {
+            NSDictionary *dict1 = [array1 objectAtIndex:i];
+            [array2 addObject:[dict1 objectForKey:@"title"]];
+            [array3 addObject:[dict1 objectForKey:@"url"]];
+            [array4 addObject:[dict1 objectForKey:@"views"]];
+            [array5 addObject:[dict1 objectForKey:@"length"]];
+            [array6 addObject:[dict1 objectForKey:@"thumbimage"]];
+            [array7 addObject:@"youtube"];
+            [array8 addObject:[dict1 objectForKey:@"id"]];
+            
+            
+        }
+    }
+    [table reloadData];
+    [myTable reloadData];
+}
+
+
+
+// To fetch newly added song from website.
+
+-(void)webData
+{
+//    [self hideLoadingIndicator];
+      [self array];
+    maptypeSegment.selectedSegmentIndex=0;
+    [webView removeFromSuperview];
+    [boxView setHidden:YES];
+    [table reloadData];
+    [youTable removeFromSuperview];
+    [stable removeFromSuperview];
+    [resTable removeFromSuperview];
+    [searchTable removeFromSuperview];
+    arrImage=nil;
+    cattype1=[[NSMutableArray alloc]init];
+    artist2=[[NSMutableArray alloc]init];
+    responseData = [NSMutableData dataWithLength:0];
+	[responseData retain];
+
+    if(arrImage==nil)
+    {
+        arrImage=[[NSMutableArray alloc]init];
+        
+    }
+    else 
+    {
+        [arrImage release];
+           }
+    
+    maptypeSegment.userInteractionEnabled=YES;
+    shouldButtonRequiredDeleteButton=NO;
+    
+    [myTable removeFromSuperview];
+    [self.view addSubview:table];
+  
+    myUrl = [NSURL URLWithString:@"http://app.singsaam.com/iphonecommondata.php"];  
+    
+    NSString *jsonreturn = [[NSString alloc]initWithContentsOfURL:myUrl usedEncoding:nil error:nil];
+//	NSLog(@"%@--------->",jsonreturn); // Look at the console and you can see what the restults are
+	
+	if (jsonreturn==nil) 
+    {
+        UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"" message:@"You are not connected with internet or SingSaam Server Down" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil,nil];
+        [alert show];
+        [alert release];
+        UIApplication* app = [UIApplication sharedApplication];
+        app.networkActivityIndicatorVisible = NO;
+        [self hideLoadingIndicator];
+    }
+	else
+    {
+        
+        NSData *jsonData = [jsonreturn dataUsingEncoding:NSUTF32BigEndianStringEncoding];
+        
+        NSLog(@"json----%i",[jsonData length]);
+        
+        [jsonreturn release];
+        
+        // In "real" code you should surround this with try and catch
+        NSDictionary * dict = [[CJSONDeserializer deserializer] deserializeAsDictionary:jsonData error:nil];
+        
+        if (dict)
+        {
+            array1=[[dict objectForKey:@"data"]retain];
+            
+            
+        }
+        
+        int i1;
+        
+        for (i1=0; i1<[array1 count]; i1++) 
+            
+        {
+            
+            NSDictionary *dict1 = [array1 objectAtIndex:i1];
+            [array2 addObject:[dict1 objectForKey:@"title"]];
+            [array3 addObject:[dict1 objectForKey:@"url"]];
+            [array4 addObject:[dict1 objectForKey:@"numview"]];
+            [array5 addObject:[dict1 objectForKey:@"duration"]];
+            [array6 addObject:[dict1 objectForKey:@"thumbimage"]];
+            [array7 addObject:[dict1 objectForKey:@"typeVedio"]];
+            [array8 addObject:[dict1 objectForKey:@"id"]];
+            [artist2 addObject:[dict1 objectForKey:@"artist"]];
+            [catArr addObject:[dict1 objectForKey:@"catName"]];
+            [cattype1 addObject:[dict1 objectForKey:@"catType"]];
+            [description addObject:[dict1 objectForKey:@"description"]];
+        }
+        NSLog(@"arrayyyy---%i",[array1 count]);
+        for(int i=0; i<[array6 count]; i++)
+        {
+            NSURL *url=[NSURL URLWithString:[array6 objectAtIndex:i]];
+            LazyLoading* asyncImage = [[[LazyLoading alloc]initWithFrame:CGRectMake(0,-10,100,120)] autorelease];
+            asyncImage.tag = 999;
+            [asyncImage loadImageFromURL:url]; 
+            [arrImage addObject:asyncImage];
+            
+//            NSLog(@"array image is %@",arrImage);
+            
+        }
+        [table reloadData];
+        UIApplication* app = [UIApplication sharedApplication];
+        app.networkActivityIndicatorVisible = NO;
+        [self hideLoadingIndicator];
+        
+        self.view.userInteractionEnabled=YES;
+        
+	}
+    
+}
+
+// allocating memory
+-(void)array
+{
+    
+    array1=nil;
+    array2=nil;
+    array3=nil;
+    array4=nil;
+    array5=nil;
+    array6=nil;
+    array7=nil;
+    array8=nil;
+    catArr=nil;
+    cattype1=nil;
+    description=nil;
+    date=nil;
+    
+    if( (array1==nil) ||(array2==nil) ||(array3==nil) ||(array4==nil) ||(array5==nil) ||(array6==nil)||(array7==nil)||(array8==nil)|| (catArr==nil) || (description==nil) || date==nil || cattype1==nil)
+        
+    {
+        array1=[[NSMutableArray alloc]init];
+        array2=[[NSMutableArray alloc]init];
+        array3=[[NSMutableArray alloc]init];
+        array4=[[NSMutableArray alloc]init];
+        array5=[[NSMutableArray alloc]init];
+        array6=[[NSMutableArray alloc]init];
+        array7=[[NSMutableArray alloc]init];
+        array8=[[NSMutableArray alloc]init];
+        catArr=[[NSMutableArray alloc]init];
+        cattype1=[[NSMutableArray alloc]init];
+        description=[[NSMutableArray alloc]init];
+        date=[[NSMutableArray alloc]init];
+    }
+    else
+    {
+        [array1 release];
+        [array2 release];
+        [array3 release];
+        [array4 release];
+        [array5 release];
+        [array6 release]; 
+        [array7 release];  
+        [array8 release];
+        [catArr release];
+        [description release];
+        [date release];
+        [cattype1 release];
+        
+    }
+}
+
+
+// to change the type of view
+-(void)changeType:(id)sender
+{
+    [libraryView removeFromSuperview];
+    [libraryView1 removeFromSuperview];
+    [categoryButton setEnabled:YES];
+    selectedRow=-1;
+    [categoryTable removeFromSuperview];
+    self.navigationController.navigationBar.userInteractionEnabled=NO;
+    self.view.userInteractionEnabled=NO;
+    maptypeSegment.userInteractionEnabled=NO;
+    UIApplication* app = [UIApplication sharedApplication];
+	app.networkActivityIndicatorVisible = YES;
+    [myView1 removeFromSuperview];
+    j=maptypeSegment.selectedSegmentIndex;
+    [self showLoadingIndicator];
+    [self performSelector:@selector(changeType1:) withObject:nil afterDelay:1.0];
+    
+}
+
+
+
+-(void)changeType1:(id)sender
+{
+    [search resignFirstResponder];
+    search.text=@"";
+    //[categoryTable removeFromSuperview];
+    [table removeFromSuperview];
+    UIApplication* app = [UIApplication sharedApplication];
+	app.networkActivityIndicatorVisible = YES;
+    self.navigationController.navigationBar.userInteractionEnabled=YES;
+    self.view.userInteractionEnabled=YES;
+    switch (j) 
+    {
+        case 0:
+        {
+            [stable removeFromSuperview];
+            [youTable removeFromSuperview];
+            [searchTable removeFromSuperview];
+            [stable removeFromSuperview];
+            [myTable removeFromSuperview];
+            
+            [youTubeTable removeFromSuperview];
+            [self webData];
+            
+             //[searchTable removeFromSuperview];
+            shouldButtonRequiredDeleteButton=NO;
+            [self.view addSubview:table];
+  
+           
+            //            ViewController *yt=[[ViewController alloc]init];
+//            [self.view addSubview:yt.view];
+//            shouldButtonRequired=YES;
+//            [self webData];
+           
+        }
+            break;
+            //        case 1:
+            //        {    
+            //            [self webData1];
+            //            [table reloadData]; 
+            //        }
+            //            break;
+        case 1:
+        {
+            
+            [myTable removeFromSuperview];
+            [searchTable removeFromSuperview];
+            [stable removeFromSuperview];
+            [table removeFromSuperview];
+            
+            [youTubeTable removeFromSuperview];
+             [self.view addSubview:youTable];
+             [self liveYouTube];
+                            }
+            break;
+        case 2:
+        {
+            [stable removeFromSuperview];
+            [youTable removeFromSuperview];
+            [searchTable removeFromSuperview];
+            [stable removeFromSuperview];
+            [table removeFromSuperview];
+            [youTable removeFromSuperview];
+        
+            [youTubeTable removeFromSuperview];
+            cattype1=[[NSMutableArray alloc]init];
+            catArr=[[NSMutableArray alloc]init];
+            UIApplication* app = [UIApplication sharedApplication];
+            app.networkActivityIndicatorVisible = NO;
+            [self hideLoadingIndicator];
+            arrImage=nil;
+            if(arrImage==nil)
+            {
+                arrImage=[[NSMutableArray alloc]init];
+                
+            }
+            else
+            {
+                [arrImage release];
+            }
+
+            maptypeSegment.userInteractionEnabled=YES;
+            self.view.userInteractionEnabled=YES;
+           
+                      
+                     NSString *strURL =[[NSString alloc]initWithFormat:@"http://app.singsaam.com/iphonelogindata.php?userid=%@",myString];
+                     
+                      myUrl = [NSURL URLWithString:strURL];
+                       [strURL release];
+                        NSString *jsonreturn = [[NSString alloc]initWithContentsOfURL:myUrl usedEncoding:nil error:nil];
+           
+                       NSLog(@"-------->%@",strURL);
+            if (jsonreturn==nil)
+            {
+                UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"" message:@"You are not connected with internet or SingSaam Server Down" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil,nil];
+                [alert show];
+                [alert release];
+                UIApplication* app = [UIApplication sharedApplication];
+                app.networkActivityIndicatorVisible = NO;
+                [self hideLoadingIndicator];
+            }
+
+           
+            
+           
+                  NSData *jsonData = [jsonreturn dataUsingEncoding:NSUTF32BigEndianStringEncoding];//            [jsonreturn release];
+            
+                        // In "real" code you should surround this with try and catch
+                        NSDictionary * dict = [[CJSONDeserializer deserializer] deserializeAsDictionary:jsonData error:nil];
+                      [self array];
+                      if (dict)
+                       {
+                           array1=[[dict objectForKey:@"dataMedia"]retain];
+           
+                        }
+          
+                      for (int i=0; i<[array1 count]; i++)
+                       {
+                          NSDictionary *dict1 = [array1 objectAtIndex:i];
+                           [array2 addObject:[dict1 objectForKey:@"title"]];
+                           [array3 addObject:[dict1 objectForKey:@"url"]];
+                           [array4 addObject:[dict1 objectForKey:@"numview"]];
+                           [array5 addObject:[dict1 objectForKey:@"duration"]];
+                           [array6 addObject:[dict1 objectForKey:@"thumbimage"]];
+                           [array7 addObject:[dict1 objectForKey:@"typeVedio"]];
+                           [array8 addObject:[dict1 objectForKey:@"id"]];
+                           [cattype1 addObject:[dict1 objectForKey:@"catType"]];
+                           [catArr  addObject:[dict1 objectForKey:@"catName"]];
+                       }
+            for(int i=0; i<[array6 count]; i++)
+            {
+                NSURL *url=[NSURL URLWithString:[array6 objectAtIndex:i]];
+                LazyLoading* asyncImage = [[[LazyLoading alloc]initWithFrame:CGRectMake(0,-10,100,120)] autorelease];
+                asyncImage.tag = 999;
+                [asyncImage loadImageFromURL:url];
+                [arrImage addObject:asyncImage];
+                
+            }
+                      [self.view addSubview:myTable];
+                      [myTable reloadData];
+            
+            
+        }
+            break;  
+        default:
+            break;
+    }
+    
+}
+
+//-(void)getuserData:(NSString*)userId
+//{
+//    str7=userId;
+//}
+// to change  orientation of app
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    if  (interfaceOrientation == UIInterfaceOrientationLandscapeLeft) 
+    {
+        return YES;
+    }
+    else if (interfaceOrientation == UIInterfaceOrientationLandscapeRight)
+    {
+        return YES; 
+    }
+    else
+    {
+        return  NO;
+    }
+}
+
+// to fetch 50 songs from website.
+-(void)liveYouTube
+{
+    [webView removeFromSuperview];
+    [myView1 removeFromSuperview];
+    maptypeSegment.userInteractionEnabled=YES;
+    sTitle=nil;
+    slink=nil;
+    link=nil;
+    sImage=nil;
+    sImage1=nil;
+    arrImage=nil;
+    myArr=nil;
+    view=nil;
+    desc1=nil;
+    Cat=nil;
+    cattype2=nil;
+    if(sTitle==nil || slink==nil || link==nil || sImage==nil || sImage1==nil || arrImage==nil || myArr==nil || view==nil || Cat==nil || cattype2==nil || desc1==nil)
+    {
+        sTitle=[[NSMutableArray alloc]init];
+        slink=[[NSMutableArray alloc]init];
+        link=[[NSMutableArray alloc]init];
+        sImage=[[NSMutableArray alloc]init];
+        sImage1=[[NSMutableArray alloc]init];
+        arrImage=[[NSMutableArray alloc]init];
+        myArr=[[NSMutableArray alloc]init];
+        view=[[NSMutableArray alloc]init];
+        Cat=[[NSMutableArray alloc]init];
+        cattype2=[[NSMutableArray alloc]init];
+        desc1=[[NSMutableArray alloc]init];
+    }
+    else
+    {
+        [sTitle release];
+        [slink release];
+        [sImage release];
+        [sImage1 release];
+        [arrImage release];
+        [link release];
+        [myArr release];
+        [view release];
+        [Cat release];
+        [cattype2 release];
+        [desc1 release];
+    }
+    
+    
+    //    searchBar=[[UISearchBar alloc]initWithFrame:CGRectMake(0, 0, 320, 35)];
+    //    searchBar.tintColor=[UIColor colorWithRed:.2 green:.5 blue:.5 alpha:.8];
+    //    [self.view addSubview:searchBar];
+    //    searchBar.delegate=self;
+    // [self.view addSubview:searchTable];
+    p_image1=[[NSMutableArray alloc]init];
+    artist=[[NSMutableArray alloc]init];
+    
+    p_image2=[[NSMutableArray alloc]init];
+    myUrl = [NSURL URLWithString:@"http://app.singsaam.com/iphoneview.php"];
+    
+    NSString *jsonreturn = [[NSString alloc]initWithContentsOfURL:myUrl usedEncoding:nil error:nil];
+    //	NSLog(@"%@--------->",jsonreturn); // Look at the console and you can see what the restults are
+	
+	if (jsonreturn==nil)
+    {
+        UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"" message:@"You are not connected with internet or SingSaam Server Down" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil,nil];
+        [alert show];
+        [alert release];
+        UIApplication* app = [UIApplication sharedApplication];
+        app.networkActivityIndicatorVisible = NO;
+        [self hideLoadingIndicator];
+    }
+	else
+    {
+        
+        NSData *jsonData = [jsonreturn dataUsingEncoding:NSUTF32BigEndianStringEncoding];
+        [jsonreturn release];
+        
+        // In "real" code you should surround this with try and catch
+        NSDictionary * dict = [[CJSONDeserializer deserializer] deserializeAsDictionary:jsonData error:nil];
+        
+        if (dict)
+        {
+            myArr=[[dict objectForKey:@"data"]retain];
+            
+            
+        }
+        
+        int i1;
+        
+        for (i1=0; i1<[myArr count]; i1++)
+            
+        {
+            
+            NSDictionary *dict1 = [myArr objectAtIndex:i1];
+            //        numview
+            //        duration
+            //
+            //        typeVedio
+            
+            
+            [link addObject:[dict1 objectForKey:@"url"]];
+            [p_image2 addObject:[dict1 objectForKey:@"thumbimage"]];
+            [p_image1 addObject:[dict1 objectForKey:@"title"]];
+            [slink addObject:[dict1 objectForKey:@"id"]];
+            [artist addObject:[dict1 objectForKey:@"artist"]];
+            [view addObject:[dict1 objectForKey:@"numview"]];
+            [Cat addObject:[dict1 objectForKey:@"catName"]];
+            [cattype2 addObject:[dict1 objectForKey:@"catType"]];
+            [desc1 addObject:[dict1 objectForKey:@"description"]];
+            NSLog(@"sdwfs=%@",artist);
+            
+                }
+ 
+        for(int i=0; i<[p_image2 count]; i++)
+        {
+            NSURL *url=[NSURL URLWithString:[p_image2 objectAtIndex:i]];
+            LazyLoading* asyncImage = [[[LazyLoading alloc]initWithFrame:CGRectMake(0,-10,100,120)] autorelease];
+            asyncImage.tag = 999;
+            [asyncImage loadImageFromURL:url];
+            [arrImage addObject:asyncImage];
+            
+        }
+        UIApplication* app = [UIApplication sharedApplication];
+        app.networkActivityIndicatorVisible = NO;
+        [self hideLoadingIndicator];
+        
+        // self.view.userInteractionEnabled=YES;
+        
+        NSLog(@"ppppp=%@",p_image1);
+        NSLog(@"link =%@",link);
+        
+        
+        
+    }
+}
+- (void)didReceiveMemoryWarning
+{
+	// Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+	
+	// Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidUnload
+{
+	// Release any retained subviews of the main view.
+	// e.g. self.myOutlet = nil;
+    
+}
+
+# pragma tableView
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView 
+{
+    if(tableView.tag==1)
+    {
+        return 1;
+    }
+    else if (tableView.tag==8)
+    {
+        return 1;
+    }
+    
+    else if (tableView.tag==11)
+    {
+        return 1;
+    }
+    else if (tableView.tag==12)
+    {
+        return 1;
+    }
+    else if (tableView.tag==14)
+    {
+        return 1;
+    }
+
+    
+    else if (tableView.tag==3)
+    {
+        return 1;
+    }
+    
+    return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section 
+
+{   
+    if(tableView.tag==1)
+    {
+        
+        return [array2 count];
+        
+    }
+    else if(tableView.tag==8)
+    {
+        return [title count];
+    }
+    
+    else if(tableView.tag==6)
+    {
+        return [array2 count];    
+    }
+    else if(tableView.tag==3)
+    {
+        return [array2 count];    
+    }
+    else if(tableView.tag==11)
+    {
+        return [p_image1 count];
+       
+    }
+    else if(tableView.tag==12)
+    {
+         return [p_image1 count];
+    }
+    else if(tableView.tag==14)
+    {
+        return [p_image1 count];
+    }
+
+    
+    return 0;   
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    
+    cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    cell=nil;
+    if (cell == nil) 
+    {
+		
+		cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier] autorelease];
+		cell.showsReorderControl = YES;
+        UIView *v = [[[UIView alloc] init] autorelease];
+        v.backgroundColor = [UIColor colorWithRed:.2 green:.5 blue:.5 alpha:.8];
+        cell.selectedBackgroundView = v;
+
+    }
+	
+    UIImageView *im=[[UIImageView alloc]initWithFrame:CGRectMake(295, 45, 15, 15)];
+    im.image=[UIImage imageNamed:@"arrow-1.png"];
+    [cell.contentView addSubview:im];
+	[im release];
+    
+    if(tableView.tag==1)
+    {
+        
+        view1=[[UIView alloc]initWithFrame:CGRectMake(0,0, 80, 100)];
+        [cell.contentView addSubview:view1];
+        [view1 addSubview:[arrImage objectAtIndex:indexPath.row]];
+        [view1 release];
+        //        NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:[arrImage objectAtIndex:indexPath.row]]]; 
+        //        UIImageView *imageView=[[UIImageView alloc]initWithImage:[UIImage imageWithData:data]];
+        //        
+        //        imageView.frame=CGRectMake(5,10,80,80);
+        //        [cell.contentView addSubview:imageView];
+        //        [imageView release];
+        
+        UILabel *label=[[UILabel alloc]initWithFrame:CGRectMake(110, 2,205,50)];
+        label.text=[array2 objectAtIndex:indexPath.row];
+        label.backgroundColor=[UIColor clearColor];
+        label.font=[UIFont boldSystemFontOfSize:12];
+        label.textColor=[UIColor whiteColor];
+//        label.lineBreakMode = UILineBreakModeClip;
+//        label.numberOfLines=4;
+        [cell.contentView addSubview:label];
+        [label release];
+        
+        
+        NSString *str2=[[NSString alloc]initWithFormat:@"By: %@",[artist2 objectAtIndex:indexPath.row]];
+        UILabel *label3=[[UILabel alloc]initWithFrame:CGRectMake(110,25,205,50)];
+        label3.text=str2;
+        [str2 release];
+        label3.backgroundColor=[UIColor clearColor];
+        label3.font=[UIFont boldSystemFontOfSize:12];
+        label3.textColor=[UIColor whiteColor];
+        label3.lineBreakMode = UILineBreakModeClip;
+        label3.numberOfLines=1;
+        [cell.contentView addSubview:label3];
+        [label3 release];
+
+        
+        
+        NSString *str1=[[NSString alloc]initWithFormat:@"Played: %@ ",[array4 objectAtIndex:indexPath.row]];
+        UILabel *label2=[[UILabel alloc]initWithFrame:CGRectMake(110,50,205,50)];
+        label2.text=str1;
+        [str1 release];
+        label2.backgroundColor=[UIColor clearColor];
+        label2.font=[UIFont boldSystemFontOfSize:12];
+        label2.textColor=[UIColor whiteColor];
+//        label2.lineBreakMode = UILineBreakModeClip;
+//        label2.numberOfLines=3;
+        [cell.contentView addSubview:label2];
+        [label2 release];
+        
+//        if (shouldButtonRequired) 
+//        {
+//            btn=[UIButton buttonWithType:UIButtonTypeCustom];
+//            btn.frame=CGRectMake(290,60,24,24);
+//            [btn setBackgroundImage:[[UIImage imageNamed:@"3.png"] stretchableImageWithLeftCapWidth:10.0 topCapHeight:3.0] forState:UIControlStateNormal];
+//            btn.tag=indexPath.row;
+//            btn.titleLabel.font=[UIFont boldSystemFontOfSize:12];
+//            [btn addTarget:self action:@selector(saveToReserve:) forControlEvents:UIControlEventTouchUpInside];
+//            // [btn setTitle:@"Reserve" forState:UIControlStateNormal];
+//            [cell.contentView addSubview:btn];
+//            
+//        }
+//        if (shouldButtonRequiredDeleteButton) 
+//        {
+//            UIButton *delbtn=[UIButton buttonWithType:UIButtonTypeCustom];
+//            delbtn.frame=CGRectMake(160,63,60,32);
+//            [delbtn setBackgroundImage:[[UIImage imageNamed:@"delete.png"] stretchableImageWithLeftCapWidth:10.0 topCapHeight:3.0] forState:UIControlStateNormal];
+//            delbtn.tag=indexPath.row;
+//            delbtn.titleLabel.font=[UIFont boldSystemFontOfSize:13];
+//            [delbtn addTarget:self action:@selector(deleteFromReserve:) forControlEvents:UIControlEventTouchUpInside];
+//            delbtn.tag=indexPath.row;
+//            [delbtn setTitle:@"Delete" forState:UIControlStateNormal];
+//            [cell.contentView addSubview:delbtn];
+//            
+//            
+//            
+//            cell.selectionStyle=UITableViewCellSelectionStyleBlue;
+//        }
+        
+        //  NSInteger getsong=indexPath.row;
+        
+        return cell;
+	}
+    
+    
+    if(tableView.tag==3)
+    {
+        NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:[array6 objectAtIndex:indexPath.row]]]; 
+        UIImageView *imageView=[[UIImageView alloc]initWithImage:[UIImage imageWithData:data]];
+        
+        imageView.frame=CGRectMake(5,10,80,80);
+        [cell.contentView addSubview:imageView];
+        [imageView release];
+             UILabel *label=[[UILabel alloc]initWithFrame:CGRectMake(110, 2,205,50)];
+       // UILabel *label3=[[UILabel alloc]initWithFrame:CGRectMake(110,30,205,50)];
+        UILabel *label2=[[UILabel alloc]initWithFrame:CGRectMake(110,50,205,50)];
+        label.text=[array2 objectAtIndex:indexPath.row];
+        label.backgroundColor=[UIColor clearColor];
+        label.font=[UIFont boldSystemFontOfSize:12];
+        label.textColor=[UIColor whiteColor];
+//        label.lineBreakMode = UILineBreakModeClip;
+//        label.numberOfLines=4;
+        [cell.contentView addSubview:label];
+        [label release];
+                NSString *str1=[[NSString alloc]initWithFormat:@"Played: %@ ",[array4 objectAtIndex:indexPath.row]];
+             label2.text=str1;
+        [str1 release];
+        label2.backgroundColor=[UIColor clearColor];
+        label2.font=[UIFont boldSystemFontOfSize:12];
+        label2.textColor=[UIColor whiteColor];
+//        label2.lineBreakMode = UILineBreakModeClip;
+//        label2.numberOfLines=3;
+        [cell.contentView addSubview:label2];
+        [label2 release];
+        if (shouldButtonRequired) 
+        {
+            btn=[UIButton buttonWithType:UIButtonTypeCustom];
+            btn.frame=CGRectMake(193,63,32,32);
+            [btn setBackgroundImage:[[UIImage imageNamed:@"3.png"] stretchableImageWithLeftCapWidth:10.0 topCapHeight:3.0] forState:UIControlStateNormal];
+            btn.tag=indexPath.row;
+            btn.titleLabel.font=[UIFont boldSystemFontOfSize:12];
+            [btn addTarget:self action:@selector(saveToReserve:) forControlEvents:UIControlEventTouchUpInside];
+            // [btn setTitle:@"Reserve" forState:UIControlStateNormal];
+            [cell.contentView addSubview:btn];
+            
+        }
+        if (shouldButtonRequiredDeleteButton) 
+        {
+            UIButton *delbtn=[UIButton buttonWithType:UIButtonTypeCustom];
+            delbtn.frame=CGRectMake(160,63,60,32);
+            [delbtn setBackgroundImage:[[UIImage imageNamed:@"delete.png"] stretchableImageWithLeftCapWidth:10.0 topCapHeight:3.0] forState:UIControlStateNormal];
+            delbtn.tag=indexPath.row;
+            delbtn.titleLabel.font=[UIFont boldSystemFontOfSize:13];
+            [delbtn addTarget:self action:@selector(deleteFromReserve:) forControlEvents:UIControlEventTouchUpInside];
+            delbtn.tag=indexPath.row;
+            [delbtn setTitle:@"Delete" forState:UIControlStateNormal];
+            [cell.contentView addSubview:delbtn];
+            
+            
+            
+            cell.selectionStyle=UITableViewCellSelectionStyleBlue;
+        }
+
+    }
+    
+  else  if(tableView.tag==11)
+    {
+        view1=[[UIView alloc]initWithFrame:CGRectMake(0,0, 100, 120)];
+        [cell.contentView addSubview:view1];
+        [view1 addSubview:[arrImage objectAtIndex:indexPath.row]];
+        [view1 release];
+        UILabel *Name=[[UILabel alloc]initWithFrame:CGRectMake(110, 2, 190, 30)];
+        Name.text  = [[p_image1 objectAtIndex:indexPath.row]capitalizedString];
+        Name.backgroundColor=[UIColor clearColor];
+//        Name.numberOfLines=2;
+//        Name.lineBreakMode=UILineBreakModeCharacterWrap;
+        Name.backgroundColor=[UIColor clearColor];
+        Name.font=[UIFont boldSystemFontOfSize:12];
+        Name.textColor=[UIColor whiteColor];        
+        [cell.contentView addSubview:Name];
+        [Name release];
+        NSString *str2=[[NSString alloc]initWithFormat:@"By: %@ ",[artist objectAtIndex:indexPath.row]];
+        UILabel *label3=[[UILabel alloc]initWithFrame:CGRectMake(110,25,205,50)];
+        label3.text=str2;
+        [str2 release];
+        label3.backgroundColor=[UIColor clearColor];
+        label3.font=[UIFont boldSystemFontOfSize:12];
+        label3.textColor=[UIColor whiteColor];
+        label3.lineBreakMode = UILineBreakModeClip;
+//        label3.numberOfLines=3;
+       [cell.contentView addSubview:label3];
+        [label3 release];
+        NSString *str1=[[NSString alloc]initWithFormat:@"Played: %@ ",[view objectAtIndex:indexPath.row]];
+        UILabel *label2=[[UILabel alloc]initWithFrame:CGRectMake(110,50,205,50)];
+        label2.text=str1;
+        [str1 release];
+        label2.backgroundColor=[UIColor clearColor];
+        label2.font=[UIFont boldSystemFontOfSize:12];
+        label2.textColor=[UIColor whiteColor];
+//        label2.lineBreakMode = UILineBreakModeClip;
+//        label2.numberOfLines=3;
+        [cell.contentView addSubview:label2];
+        [label2 release];
+        return cell;
+    }
+    else if (tableView.tag==12)
+    {
+      
+        view1=[[UIView alloc]initWithFrame:CGRectMake(0,0, 100, 120)];
+        [cell.contentView addSubview:view1];
+        [view1 addSubview:[arrImage objectAtIndex:indexPath.row]];
+        [view1 release];
+        UILabel *Name=[[UILabel alloc]initWithFrame:CGRectMake(110,2, 190, 40)];
+        Name.text  = [[p_image1 objectAtIndex:indexPath.row]capitalizedString];
+        Name.backgroundColor=[UIColor clearColor];
+//        Name.numberOfLines=2;
+//        Name.lineBreakMode=UILineBreakModeCharacterWrap;
+        Name.backgroundColor=[UIColor clearColor];
+        Name.font=[UIFont boldSystemFontOfSize:12];
+        Name.textColor=[UIColor whiteColor];
+        [cell.contentView addSubview:Name];
+        [Name release];
+        NSString *str2=[[NSString alloc]initWithFormat:@"By: %@ ",[artist objectAtIndex:indexPath.row]];
+        UILabel *label3=[[UILabel alloc]initWithFrame:CGRectMake(110,25,205,50)];
+        label3.text=str2;
+        [str2 release];
+        label3.backgroundColor=[UIColor clearColor];
+        label3.font=[UIFont boldSystemFontOfSize:12];
+        label3.textColor=[UIColor whiteColor];
+        label3.lineBreakMode = UILineBreakModeClip;
+        label3.numberOfLines=1;
+        [cell.contentView addSubview:label3];
+        [label3 release];
+        NSString *str1=[[NSString alloc]initWithFormat:@"Played: %@ ",[view objectAtIndex:indexPath.row]];
+        UILabel *label2=[[UILabel alloc]initWithFrame:CGRectMake(110,50,205,50)];
+        label2.text=str1;
+        [str1 release];
+        label2.backgroundColor=[UIColor clearColor];
+        label2.font=[UIFont boldSystemFontOfSize:12];
+        label2.textColor=[UIColor whiteColor];
+        label2.lineBreakMode = UILineBreakModeClip;
+        label2.numberOfLines=1;
+        [cell.contentView addSubview:label2];
+        [label2 release];
+        
+        return cell;
+        
+    }
+    
+    else if (tableView.tag==14)
+    {
+        view1=[[UIView alloc]initWithFrame:CGRectMake(0,0, 100, 120)];
+        [cell.contentView addSubview:view1];
+        [view1 addSubview:[arrImage objectAtIndex:indexPath.row]];
+        [view1 release];
+        UILabel *Name=[[UILabel alloc]initWithFrame:CGRectMake(110,2, 190, 40)];
+        Name.text  = [[p_image1 objectAtIndex:indexPath.row]capitalizedString];
+        Name.backgroundColor=[UIColor clearColor];
+//        Name.numberOfLines=2;
+//        Name.lineBreakMode=UILineBreakModeCharacterWrap;
+        Name.backgroundColor=[UIColor clearColor];
+        Name.font=[UIFont boldSystemFontOfSize:12];
+        Name.textColor=[UIColor whiteColor];
+        [cell.contentView addSubview:Name];
+        [Name release];
+        NSString *str2=[[NSString alloc]initWithFormat:@"By: %@ ",[artist objectAtIndex:indexPath.row]];
+        UILabel *label3=[[UILabel alloc]initWithFrame:CGRectMake(110,25,205,50)];
+        label3.text=str2;
+        [str2 release];
+        label3.backgroundColor=[UIColor clearColor];
+        label3.font=[UIFont boldSystemFontOfSize:12];
+        label3.textColor=[UIColor whiteColor];
+        label3.lineBreakMode = UILineBreakModeClip;
+        label3.numberOfLines=1;
+        [cell.contentView addSubview:label3];
+        [label3 release];
+         NSString *str1=[[NSString alloc]initWithFormat:@"Played: %@ ",[view objectAtIndex:indexPath.row]];
+        UILabel *label2=[[UILabel alloc]initWithFrame:CGRectMake(110,50,205,50)];
+        label2.text=str1;
+        [str1 release];
+        label2.backgroundColor=[UIColor clearColor];
+        label2.font=[UIFont boldSystemFontOfSize:12];
+        label2.textColor=[UIColor whiteColor];
+        label2.lineBreakMode = UILineBreakModeClip;
+        label2.numberOfLines=1;
+        [cell.contentView addSubview:label2];
+        [label2 release];
+        
+        return cell;
+        
+    }
+
+    
+//
+    
+    else if(tableView.tag==8)
+    {
+        
+        cell.textLabel.text=[title objectAtIndex:indexPath.row];
+        cell.textLabel.textColor=[UIColor blackColor];
+//        NSLog(@"titier=%@",[title objectAtIndex:indexPath.row]);
+        cell.textLabel.font=[UIFont systemFontOfSize:13];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        int row = [indexPath row];
+        cell.accessoryType = (row == selectedRow) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
+        return cell;
+    }
+    
+    
+    if (tableView.tag==6)
+    {
+        view2=[[UIView alloc]initWithFrame:CGRectMake(0,0, 100, 120)];
+        [cell.contentView addSubview:view2];
+        [view2 addSubview:[arrImage objectAtIndex:indexPath.row]];
+        [view2 release];
+        
+        UILabel *label=[[UILabel alloc]initWithFrame:CGRectMake(110, 2,205,50)];
+        label.text=[array2 objectAtIndex:indexPath.row];
+        label.backgroundColor=[UIColor clearColor];
+        label.font=[UIFont boldSystemFontOfSize:12];
+        label.textColor=[UIColor whiteColor];
+//        label.lineBreakMode = UILineBreakModeClip;
+//        label.numberOfLines=4;
+        [cell.contentView addSubview:label];
+        [label release];
+        
+        
+        NSString *str2=[[NSString alloc]initWithFormat:@"By: %@ ",[artist2 objectAtIndex:indexPath.row]];
+        UILabel *label3=[[UILabel alloc]initWithFrame:CGRectMake(110,25,205,50)];
+        label3.text=str2;
+        [str2 release];
+        label3.backgroundColor=[UIColor clearColor];
+        label3.font=[UIFont boldSystemFontOfSize:12];
+        label3.textColor=[UIColor whiteColor];
+//        label3.lineBreakMode = UILineBreakModeClip;
+//        label3.numberOfLines=3;
+        [cell.contentView addSubview:label3];
+        [label3 release];
+        
+        
+        
+        NSString *str1=[[NSString alloc]initWithFormat:@"Played: %@ ",[array4 objectAtIndex:indexPath.row]];
+        UILabel *label2=[[UILabel alloc]initWithFrame:CGRectMake(110,50,205,50)];
+        label2.text=str1;
+        [str1 release];
+        label2.backgroundColor=[UIColor clearColor];
+        label2.font=[UIFont boldSystemFontOfSize:12];
+        label2.textColor=[UIColor whiteColor];
+//        label2.lineBreakMode = UILineBreakModeClip;
+//        label2.numberOfLines=3;
+        [cell.contentView addSubview:label2];
+        [label2 release];
+                    
+        return cell;
+    }
+    return cell;
+}
+
+
+
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath  
+{
+	if(tableView.tag==1)
+    {
+        return 90;
+	}
+    else if(tableView.tag==8)
+    {
+        return 35;    
+    }
+    else   if(tableView.tag==6)
+    {
+        return 90;
+	}
+    else   if(tableView.tag==3)
+    {
+        return 90;
+	}
+    
+    else   if(tableView.tag==11)
+    {
+
+    
+    return 90;
+    }
+    else   if(tableView.tag==12)
+    {
+        return 90;
+    }
+    else   if(tableView.tag==14)
+    {
+        return 90;
+    }
+
+        return 0;
+	
+}
+
+-(void)location1
+{
+    UIApplication* app = [UIApplication sharedApplication];
+    app.networkActivityIndicatorVisible = NO;
+    self.view.userInteractionEnabled=YES;
+    group=[[groupTableViewController alloc]init];
+// [self mediaId:[array8 objectAtIndex:index1]];
+    NSLog(@"hsdsa--%@",[cattype1 objectAtIndex:index1]);
+        [group initWithSong:[array2 objectAtIndex:index1] andView:[array4 objectAtIndex:index1] andImage:[array6 objectAtIndex:index1] andUser:[artist2 objectAtIndex:index1 ] andLink:[array3 objectAtIndex:index1 ] andSongId:[array8 objectAtIndex:index1] andCat:[catArr objectAtIndex:index1] ];
+    
+     [group cat:[cattype1 objectAtIndex:index1]];
+    [self.navigationController pushViewController:group animated:YES];
+    [HUD removeFromSuperview];
+   
+}
+
+-(void)location2
+{
+    UIApplication* app = [UIApplication sharedApplication];
+    app.networkActivityIndicatorVisible = NO;
+    self.view.userInteractionEnabled=YES;
+    group=[[groupTableViewController alloc]init];
+    [group initWithSong:[p_image1 objectAtIndex:index1] andView:[view objectAtIndex:index1] andImage:[p_image2 objectAtIndex:index1] andUser:[artist objectAtIndex:index1 ] andLink:[link objectAtIndex:index1 ] andSongId:[slink objectAtIndex:index1] andCat:[Cat objectAtIndex:index1]];
+    [group cat:[cattype2 objectAtIndex:index1]];
+    
+    NSLog(@"cattttttwqdeer qwe---%@",[cattype2 objectAtIndex:index1]);
+    
+    [self.navigationController pushViewController:group animated:YES];
+
+    [HUD removeFromSuperview];
+    
+}
+ 
+-(void)location3
+{
+    UIApplication* app = [UIApplication sharedApplication];
+    app.networkActivityIndicatorVisible = NO;
+    self.view.userInteractionEnabled=YES;
+    group=[[groupTableViewController alloc]init];
+    
+    NSLog(@"cattttt-2-23-%@",cattype1);
+    //    choose=[[PlaylistViewController alloc]init];
+    [group initWithSong:[array2 objectAtIndex:index1] andView:[array4 objectAtIndex:index1] andImage:[array6 objectAtIndex:index1] andUser:[artist2 objectAtIndex:index1 ] andLink:[array3 objectAtIndex:index1 ] andSongId:[array8 objectAtIndex:index1] andCat:[catArr objectAtIndex:index1] ];       [group cat:[cattype1 objectAtIndex:index1]];
+    [self.navigationController pushViewController:group animated:YES];
+    [HUD removeFromSuperview];
+    
+}
+-(void)location4
+{
+    UIApplication* app = [UIApplication sharedApplication];
+    app.networkActivityIndicatorVisible = NO;
+    self.view.userInteractionEnabled=YES;
+    group=[[groupTableViewController alloc]init];
+    [group initWithSong:[p_image1 objectAtIndex:index1] andView:[view objectAtIndex:index1] andImage:[p_image2 objectAtIndex:index1] andUser:[artist objectAtIndex:index1 ] andLink:[link objectAtIndex:index1 ] andSongId:[slink objectAtIndex:index1] andCat:[Cat objectAtIndex:index1]];
+    
+    [group cat:[cattype2 objectAtIndex:index1]];
+    NSLog(@"cattttt-2-23-%@",cattype2);
+    [self.navigationController pushViewController:group animated:YES];
+    
+    [HUD removeFromSuperview];
+    
+}
+
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+//    NSLog(@"arraysasdsadfsa-%@",[array8 objectAtIndex:index1]);
+
+    index1=indexPath.row;
+    UIApplication* app = [UIApplication sharedApplication];
+    app.networkActivityIndicatorVisible = YES;
+   
+      self.view.userInteractionEnabled=NO;
+    HUD = [[MBProgressHUD alloc] initWithView:self.view];
+    [self.view addSubview:HUD];
+    
+    // Set determinate mode
+    HUD.mode = MBProgressHUDModeDeterminate;
+//    HUD.delegate = self;
+    HUD.labelText = @"Loading";
+    [HUD show:YES];
+
+    if(tableView.tag==1)
+    {
+     
+  
+                 
+        
+        [self performSelector:@selector(location1) withObject:nil afterDelay:.001];
+
+   
+    }
+if(tableView.tag==11)
+{
+         
+    [self performSelector:@selector(location2) withObject:nil afterDelay:.001];
+   
+       
+      
+          
+}
+    if(tableView.tag==6)
+       {
+        
+    [self performSelector:@selector(location3) withObject:nil afterDelay:.001];
+        }
+    if(tableView.tag==12)
+    {
+        
+        [self performSelector:@selector(location4) withObject:nil afterDelay:.001];
+        
+        
+        
+        NSLog(@"table 6688");
+        
+    }
+    if(tableView.tag==14)
+    {
+        
+        [self performSelector:@selector(location4) withObject:nil afterDelay:.001];
+        
+        
+        
+        NSLog(@"table 6688");
+        
+    }
+
+}
+
+
+
+#pragma mark - ADBannerViewDelegate
+
+- (void)bannerViewDidLoadAd:(ADBannerView *)banner
+{
+    bannerIsVisible=YES;
+    [self adjustBannerView];
+}
+
+- (void)bannerView:(ADBannerView *)banner didFailToReceiveAdWithError:(NSError *)error
+{
+    bannerIsVisible=NO;
+    [self adjustBannerView];
+}
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+    if (UIInterfaceOrientationIsPortrait(toInterfaceOrientation))
+        adBannerView.currentContentSizeIdentifier = ADBannerContentSizeIdentifierPortrait;
+    
+}
+
+
+
+-(void)btnAction:(id)sender
+{
+       
+    //begin the authentication process.....
+   
+    [boxView removeFromSuperview];
+   //
+    switch ([sender tag])
+	
+	{
+		case 0:
+{
+    
+    if(maptypeSegment.selectedSegmentIndex==0)
+    {
+       nowPlayingViewController *yp=[[nowPlayingViewController alloc]init];
+        AppDelegate *theDelegate = (AppDelegate*)[[UIApplication sharedApplication] delegate];
+        theDelegate.webSong=[array3 objectAtIndex:index1];
+        
+        //            NSLog(@"the delegate=%@",theDelegate.webSong);
+        [yp getVideo];
+        theDelegate.tabController.selectedIndex=2;
+        [yp release];
+
+    }
+    else if(maptypeSegment.selectedSegmentIndex==1)
+    {
+        nowPlayingViewController *yp=[[nowPlayingViewController alloc]init];
+        AppDelegate *theDelegate = (AppDelegate*)[[UIApplication sharedApplication] delegate];
+        theDelegate.webSong=[link objectAtIndex:index1];
+        
+        //            NSLog(@"the delegate=%@",theDelegate.webSong);
+        [yp getVideo];
+
+        theDelegate.tabController.selectedIndex=2;
+        [yp release];
+      
+    }
+}
+            break;
+        case 1:
+        {
+
+           if(maptypeSegment.selectedSegmentIndex==0)
+           {
+              
+               [libraryView1 removeFromSuperview];
+                           
+               [self.view addSubview:libraryView];
+
+               
+               titleField=[[UITextField alloc]initWithFrame:CGRectMake(25,10, 150, 30)];
+               titleField.textColor=[UIColor blackColor];
+               titleField.borderStyle = UITextBorderStyleRoundedRect;
+               titleField.delegate=self;
+               titleField.text=[array2 objectAtIndex:index1];
+               [libraryView addSubview:titleField];
+               
+               artistField=[[UITextField alloc]initWithFrame:CGRectMake(25, 60, 150, 30)];
+               artistField.text=[artist2 objectAtIndex:index1];
+               artistField.textColor=[UIColor blackColor];
+               artistField.delegate=self;
+               artistField.borderStyle = UITextBorderStyleRoundedRect;
+               [libraryView addSubview:artistField];
+               
+               categoryField=[[UITextField alloc]initWithFrame:CGRectMake(25, 110, 150, 30)];
+               categoryField.text=[catArr objectAtIndex:index1];
+               NSLog(@"---%@",[catArr objectAtIndex:index1]);
+               categoryField.delegate=self;
+               categoryField.textColor=[UIColor blackColor];
+               categoryField.borderStyle = UITextBorderStyleRoundedRect;
+               [libraryView addSubview:categoryField];
+               addLibray=[UIButton buttonWithType:UIButtonTypeCustom];
+               addLibray.frame=CGRectMake(45, 160, 110, 30);
+               [libraryView addSubview:addLibray];
+               addLibray.titleLabel.font=[UIFont fontWithName:@"arial" size:15.0];
+               [addLibray setTitle:@"Add To Library" forState:UIControlStateNormal];
+               [addLibray addTarget:nil action:@selector(addToLibrary) forControlEvents:UIControlEventTouchUpInside];
+               [addLibray setBackgroundImage:[UIImage imageNamed:@"Menu_Button.png"] forState:UIControlStateNormal];
+
+           }
+            
+            else if(maptypeSegment.selectedSegmentIndex==1)
+            {
+                [libraryView removeFromSuperview];
+                               [self.view addSubview:libraryView1];
+                
+                titleField=[[UITextField alloc]initWithFrame:CGRectMake(25,10, 150, 30)];
+                artistField=[[UITextField alloc]initWithFrame:CGRectMake(25, 60, 150, 30)];
+                categoryField=[[UITextField alloc]initWithFrame:CGRectMake(25, 110, 150, 30)];
+              
+//                titleField=[[UITextField alloc]initWithFrame:CGRectMake(20, 20, 150, 30)];
+                titleField.textColor=[UIColor blackColor];
+                titleField.borderStyle = UITextBorderStyleRoundedRect;
+                
+                titleField.text=[p_image1 objectAtIndex:index1];
+                [libraryView1 addSubview:titleField];
+                
+//                artistField=[[UITextField alloc]initWithFrame:CGRectMake(20, 70, 150, 30)];
+                artistField.text=[artist objectAtIndex:index1];
+                artistField.textColor=[UIColor blackColor];
+                artistField.borderStyle = UITextBorderStyleRoundedRect;
+                [libraryView1 addSubview:artistField];
+                
+//                categoryField=[[UITextField alloc]initWithFrame:CGRectMake(20, 120, 150, 30)];
+                categoryField.text=[Cat objectAtIndex:index1];
+                categoryField.textColor=[UIColor blackColor];
+                categoryField.borderStyle = UITextBorderStyleRoundedRect;
+                [libraryView1 addSubview:categoryField];
+                               addLibray=[UIButton buttonWithType:UIButtonTypeCustom];
+                addLibray.frame=CGRectMake(45, 160, 110, 30);
+                [libraryView1 addSubview:addLibray];
+                addLibray.titleLabel.font=[UIFont fontWithName:@"arial" size:15.0];
+                [addLibray setTitle:@"Add To Library" forState:UIControlStateNormal];
+                [addLibray addTarget:nil action:@selector(addToLibrary) forControlEvents:UIControlEventTouchUpInside];
+                [addLibray setBackgroundImage:[UIImage imageNamed:@"Menu_Button.png"] forState:UIControlStateNormal];
+                titleField.delegate=self;
+                artistField.delegate=self;
+                categoryField.delegate=self;
+            }
+            
+            
+        }
+            break;
+        case 2:
+        {
+        
+                      
+        webView=[[UIWebView alloc]initWithFrame:CGRectMake(0, 60, 290, 400)];
+            [self.view addSubview:webView];
+        
+                     
+          
+    [fbGraph authenticateUserWithCallbackObject:self andSelector:@selector(fbGraphCallback:)
+                                 andExtendedPermissions:@"user_photos,user_videos,publish_stream,offline_access,user_checkins,friends_checkins"];
+            [webView addSubview:fbGraph.webView];
+                         if(maptypeSegment.selectedSegmentIndex==0)
+            {
+                             //                                               @"Facebook SDK for iOS", @"name",
+//                                               @"Build great social apps and get more installs.", @"caption",
+//                                               @"The Facebook SDK for iOS makes it easier and faster to develop Facebook integrated iOS apps.", @"description",
+//                                               @"https://developers.facebook.com/ios", @"link",
+//                                               @"https://raw.github.com/fbsamples/ios-3.x-howtos/master/Images/iossdk_logo.png", @"picture",
+//                                               nil];
+//                
+//                // Invoke the dialog
+//                [self.facebook dialog:@"feed" andParams:params andDelegate:self];
+                
+                NSMutableDictionary *variables = [NSMutableDictionary dictionaryWithCapacity:4];
+                
+                [variables setObject:[NSString stringWithFormat:@"%@ by SingSaam App",[array2 objectAtIndex:index1]]  forKey:@"message"];
+                [variables setObject:[array3 objectAtIndex:index1] forKey:@"link"];
+              //  [variables setObject:@"This is the bolded copy next to the image" forKey:@"name"];
+              //  [variables setObject:@"This is the plain text copy next to the image.  All work and no play makes Jack a dull boy." forKey:@"description"];
+                
+                FbGraphResponse *fb_graph_response = [fbGraph doGraphPost:@"me/feed" withPostVars:variables];
+                NSLog(@"postMeFeedButtonPressed:  %@", fb_graph_response.htmlResponse);
+                
+                //parse our json
+                SBJSON *parser = [[SBJSON alloc] init];
+                NSDictionary *facebook_response = [parser objectWithString:fb_graph_response.htmlResponse error:nil];
+              
+                
+                //let's save the 'id' Facebook gives us so we can delete it if the user presses the 'delete /me/feed button'
+               feedPostId = (NSString *)[facebook_response objectForKey:@"id"];
+                NSLog(@"feedPostId, %@", feedPostId);
+                NSLog(@"Now log into Facebook and look at your profile...");
+
+                
+                
+                     }
+                        
+            if(maptypeSegment.selectedSegmentIndex==1 )
+            {
+                NSMutableDictionary *variables = [NSMutableDictionary dictionaryWithCapacity:4];
+                
+                [variables setObject:[NSString stringWithFormat:@"%@ by SingSaam App",[p_image1 objectAtIndex:index1]]  forKey:@"message"];
+                [variables setObject:[link objectAtIndex:index1] forKey:@"link"];
+                //  [variables setObject:@"This is the bolded copy next to the image" forKey:@"name"];
+                //  [variables setObject:@"This is the plain text copy next to the image.  All work and no play makes Jack a dull boy." forKey:@"description"];
+                
+                FbGraphResponse *fb_graph_response = [fbGraph doGraphPost:@"me/feed" withPostVars:variables];
+                NSLog(@"postMeFeedButtonPressed:  %@", fb_graph_response.htmlResponse);
+                
+                //parse our json
+                SBJSON *parser = [[SBJSON alloc] init];
+                NSDictionary *facebook_response = [parser objectWithString:fb_graph_response.htmlResponse error:nil];
+                
+                
+                //let's save the 'id' Facebook gives us so we can delete it if the user presses the 'delete /me/feed button'
+                feedPostId = (NSString *)[facebook_response objectForKey:@"id"];
+                NSLog(@"feedPostId, %@", feedPostId);
+                NSLog(@"Now log into Facebook and look at your profile...");
+            }
+            
+                   }
+            break;
+    
+default:
+    break;
+    }
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [titleField resignFirstResponder];
+    [artistField resignFirstResponder];
+    [categoryField resignFirstResponder];
+    return YES;
+    
+}
+
+ // Add Song to Library
+
+-(void)addToLibrary
+{
+    [libraryView1 removeFromSuperview];
+    [libraryView removeFromSuperview];
+            if(maptypeSegment.selectedSegmentIndex==0)
+           {
+              [dataObject findPath];
+               [dataObject createDatabaseIfNotFound];
+ 
+               [dataObject fetchDataFromFavouriteUrlTable];
+ 
+               if(![dataObject.SongArrayFromSongOfSingSaam containsObject:[[[array2 objectAtIndex:index1]stringByReplacingOccurrencesOfString:@"'" withString:@"_"]stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]])
+               {
+                  
+                 
+   
+                
+                   [dataObject insertValuesIntoSongsTableCategory:[array8 objectAtIndex:index1] andView: [array4 objectAtIndex:index1] andimage:[array6 objectAtIndex:index1] andCat:[catArr objectAtIndex:index1] artist:[[artist2 objectAtIndex:index1]stringByReplacingOccurrencesOfString:@"'" withString:@"_"] songFromResource:[array3 objectAtIndex:index1] S_ID:[dataObject.SongArrayFromSongOfSingSaam count]+1  song:[[[array2 objectAtIndex:index1]stringByReplacingOccurrencesOfString:@"'" withString:@"_"] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]] ;
+     
+     
+     }
+                else
+  
+                {
+                    
+                UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"" message:@"This song already exists in Library " delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+                      [alert show];
+                     [alert release];
+                  }
+  
+               }
+  
+              else if(maptypeSegment.selectedSegmentIndex==1)
+           {
+              [dataObject findPath];
+                [dataObject createDatabaseIfNotFound];
+                 [dataObject fetchDataFromFavouriteUrlTable];
+
+                
+ 
+               if(![dataObject.SongArrayFromSongOfSingSaam containsObject:[[[p_image1 objectAtIndex:index1]stringByReplacingOccurrencesOfString:@"'" withString:@"_"]stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]])
+                  {
+                    
+   
+                      [dataObject insertValuesIntoSongsTableCategory:[slink objectAtIndex:index1] andView:[view objectAtIndex:index1] andimage:[p_image2 objectAtIndex:index1] andCat:[Cat objectAtIndex:index1] artist:[artist objectAtIndex:index1] songFromResource:[link objectAtIndex:index1] S_ID:[dataObject.SongArrayFromSongOfSingSaam count]+1 song:[[[p_image1 objectAtIndex:index1]stringByReplacingOccurrencesOfString:@"'" withString:@"_"] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+  
+                }
+                  else
+               {
+                   UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"" message:@"This song already exists in Library " delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+                      [alert show];
+                    [alert release];
+                   }
+              }
+}
+
+// Share link on Facebook
+
+- (void)fbGraphCallback:(id)sender
+{
+	
+	if ( (fbGraph.accessToken == nil) || ([fbGraph.accessToken length] == 0) )
+    {
+		
+		NSLog(@"You pressed the 'cancel' or 'Dont Allow' button, you are NOT logged into Facebook...I require you to be logged in & approve access before you can do anything useful....");
+		
+		//restart the authentication process.....
+		[fbGraph authenticateUserWithCallbackObject:self andSelector:@selector(fbGraphCallback:)
+							 andExtendedPermissions:@"user_photos,user_videos,publish_stream,offline_access,user_checkins,friends_checkins"];
+		
+	}
+    else
+    {
+		//pop a message letting them know most of the info will be dumped in the log
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Congratulations" message:@"Link  is shared successfully on Facebook " delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil];
+		[alert show];
+		[alert release];
+		
+		NSLog(@"------------>CONGRATULATIONS<------------, You're logged into Facebook...  Your oAuth token is:  %@", fbGraph.accessToken);
+		[webView removeFromSuperview];
+	}
+	
+}
+
+
+
+@end
